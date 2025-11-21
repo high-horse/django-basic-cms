@@ -1,0 +1,122 @@
+{% extends 'layout.html' %}
+
+{% block title %}
+    {{ title|default_if_none:"MY HOME PAGE" }}
+{% endblock %}
+
+{% block content %}
+{% if featured_posts %}
+<div id="featuredCarousel" class="carousel slide mb-4" data-bs-ride="carousel" data-bs-interval="3000">
+    
+    <!-- Indicators -->
+    <div class="carousel-indicators">
+        {% for post in featured_posts %}
+        <button type="button" data-bs-target="#featuredCarousel" data-bs-slide-to="{{ forloop.counter0 }}"
+            {% if forloop.first %}class="active" aria-current="true"{% endif %} aria-label="Slide {{ forloop.counter }}">
+        </button>
+        {% endfor %}
+    </div>
+
+    <!-- Slides -->
+    <div class="carousel-inner">
+        {% for post in featured_posts %}
+        <div class="carousel-item {% if forloop.first %}active{% endif %}">
+            <div class="position-relative">
+                <img src="{{ post.image.url }}" class="d-block w-100" style="height:400px; object-fit:cover;">
+
+                <!-- Clickable overlay -->
+                <div class="position-absolute bottom-0 start-0 p-3 w-100 overlay-link"
+                    data-url="{% url 'post_detail' slug=post.slug %}"
+                    style="background: rgba(0,0,0,0.5); cursor:pointer;"
+                >
+                    <h2 class="fw-bold text-white">{{ post.title }}</h2>
+                    <p class="fw-semibold text-white">{{ post.description }}</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Controls -->
+    <button class="carousel-control-prev" type="button" data-bs-target="#featuredCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon"></span>
+    </button>
+
+    <button class="carousel-control-next" type="button" data-bs-target="#featuredCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon"></span>
+    </button>
+
+</div>
+{% endif %}
+
+
+
+
+
+<!-- Smaller posts row -->
+<div class="mx-5 my-5">
+    <div class="row " >
+        {% for post in posts %}
+        <div class="col-md-3">
+                <a href="{% url 'post_detail' slug=post.slug %}" class="text-decoration-none">
+                <div class="card child-card mb-3" style="background-color: rgb(208, 247, 247);;">
+                    {% if post.image %}
+                        <img src="{{ post.image.url }}" class="card-img-top" alt="{{ post.title }}" style="height:150px; object-fit:cover;">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ post.title }}</h5>
+                        <p class="card-text text-truncate" style="max-height: 4.5em; overflow: hidden;">{{ post.description|default:"No description available" }}</p>
+                    </div>
+                </div>
+            </a>
+            </div>
+        {% empty %}
+        <p class="text-muted">No posts available.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    
+    .child-card:hover {
+    transform: scale(1.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);  /* subtle shadow */
+    z-index: 1;
+}
+.overlay-link {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 1rem;
+    background: rgba(0,0,0,0.5);
+    cursor: pointer;
+    z-index: 9999;          /* really on top */
+    pointer-events: all;     /* capture all clicks */
+}
+
+.carousel-item {
+    pointer-events: none;   /* ignore clicks on the slide itself */
+}
+
+.carousel-item img {
+    pointer-events: none;   /* ignore clicks on the image */
+}
+
+
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.overlay-link').forEach(el => {
+        el.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const url = this.dataset.url;
+            window.location.href = url;
+        });
+    });
+});
+</script>
+
+
+{% endblock %}
