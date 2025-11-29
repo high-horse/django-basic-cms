@@ -31,6 +31,9 @@
                 >
                     <h2 class="fw-bold text-white">{{ post.title }}</h2>
                     <p class="fw-semibold text-white">{{ post.description }}</p>
+                    {% if post.category %}
+                    <span class="badge bg-primary">{{ post.category.name }}</span>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -55,6 +58,63 @@
 
 <!-- Smaller posts row -->
 <div class="mx-5 my-5">
+    <!-- <div class="mb-4">
+        <h3>Categories</h3>
+        <ul class="list-inline mb-0">
+            {% for category in categories %}
+            <li class="list-inline-item">
+                <a href="#" class="badge rounded-pill text-decoration-none
+                   {% if category.name in selected_categories %}bg-success text-white{% else %}bg-primary text-white{% endif %} category-filter"
+                   data-category="{{ category.name|escape }}"
+                   role="button"
+                   aria-pressed="{% if category.name in selected_categories %}true{% else %}false{% endif %}"
+                   title="Filter by {{ category.name }}">
+                    {{ category.name }}
+                </a>
+            </li>
+            {% empty %}
+            <li class="text-muted fst-italic">No categories available</li>
+            {% endfor %}
+        </ul>
+    </div> -->
+    <!-- Categories -->
+    <div class="mb-4">
+        <h3>Categories</h3>
+        <!-- <pre>DEBUG: {{ selected_categories|pprint }}</pre> -->
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            {% for category in categories %}
+            <button 
+                type="button"
+                class="category-chip 
+                    px-4 py-2 
+                    rounded-pill 
+                    border-0 
+                    fs-5 
+                    fw-medium
+                    {% if category.name in selected_categories %}bg-primary text-white{% else %}bg-light text-dark{% endif %}"
+                data-category="{{ category.name|escape }}"
+                aria-pressed="{% if category.name in selected_categories %}true{% else %}false{% endif %}"
+                title="Toggle {{ category.name }}"
+            >
+                {{ category.name }}
+                {% if category.name in selected_categories %}
+                    <i class="fas fa-check ms-2"></i>
+                {% endif %}
+            </button>
+            {% empty %}
+            <span class="text-muted fst-italic">No categories available</span>
+            {% endfor %}
+
+            {% if selected_categories %}
+            <a href="{% url 'home' %}" class="btn btn-outline-secondary px-3 py-2 rounded-pill ms-2">
+                <i class="fas fa-filter-circle-xmark me-1"></i> Clear filters
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+
+    <h3>Recent Posts</h3>
     <div class="row " >
         {% for post in posts %}
         <div class="col-md-3">
@@ -66,6 +126,10 @@
                     <div class="card-body">
                         <h5 class="card-title">{{ post.title }}</h5>
                         <p class="card-text text-truncate" style="max-height: 4.5em; overflow: hidden;">{{ post.description|default:"No description available" }}</p>
+                        {% if post.category %}
+                        <span class="badge bg-primary">{{ post.category.name }}</span>
+                        {% endif %}
+                            <!-- (ID: {{ post.category.id }}) -->
                     </div>
                 </div>
             </a>
@@ -118,5 +182,188 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+<script>
+// document.addEventListener('DOMContentLoaded', function () {
+//     // Load selected categories safely from Python
+//     const selectedDataEl = document.getElementById('selectedCategoriesData');
+//     const selectedCategories = selectedDataEl 
+//         ? JSON.parse(selectedDataEl.textContent) 
+//         : [];
+
+//     const categoryBadges = document.querySelectorAll('.category-filter');
+
+//     categoryBadges.forEach(badge => {
+//         badge.addEventListener('click', function (e) {
+//             e.preventDefault();
+//             const category = this.dataset.category;
+
+//             // Toggle category in list
+//             const idx = selectedCategories.indexOf(category);
+//             if (idx > -1) {
+//                 selectedCategories.splice(idx, 1); // remove
+//             } else {
+//                 selectedCategories.push(category); // add
+//             }
+
+//             // Update aria & visual style instantly
+//             const isSelected = selectedCategories.includes(category);
+//             this.setAttribute('aria-pressed', isSelected);
+//             this.classList.toggle('bg-success', isSelected);
+//             this.classList.toggle('bg-primary', !isSelected);
+
+//             // Build new query string **preserving other params** (e.g., ?page=2)
+//             const url = new URL(window.location.href);
+//             if (selectedCategories.length > 0) {
+//                 url.searchParams.set('categories', selectedCategories.join(','));
+//             } else {
+//                 url.searchParams.delete('categories');
+//             }
+
+//             // Navigate (preserves hash, other params)
+//             window.location.href = url.toString();
+//         });
+//     });
+
+//     // Optional: Add 'Clear Filters' button (uncomment if needed)
+//     /*
+//     const clearBtn = document.getElementById('clear-filters');
+//     if (clearBtn) {
+//         clearBtn.addEventListener('click', function(e) {
+//             e.preventDefault();
+//             const url = new URL(window.location.href);
+//             url.searchParams.delete('categories');
+//             window.location.href = url.toString();
+//         });
+//     }
+//     */
+// });
+</script>
+
+<style>
+    .category-chip {
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .category-chip:hover:not([aria-pressed="true"]) {
+        background-color: #f1f3f5;
+    }
+    .category-chip:hover[aria-pressed="true"] {
+        background-color: #0d6efd;
+        filter: brightness(1.05);
+    }
+    .category-chip:focus {
+        outline: 2px solid #86b7fe;
+        outline-offset: 2px;
+    }
+    .category-chip:active {
+        transform: scale(0.98);
+    }
+</style>
+
+<script>
+// document.addEventListener('DOMContentLoaded', function () {
+//     const selectedDataEl = document.getElementById('selectedCategoriesData');
+//     let selectedCategories = selectedDataEl 
+//         ? JSON.parse(selectedDataEl.textContent) 
+//         : [];
+
+//     document.querySelectorAll('.category-chip').forEach(chip => {
+//         chip.addEventListener('click', function () {
+//             const category = this.dataset.category;
+//             const isSelected = this.getAttribute('aria-pressed') === 'true';
+
+//             // Toggle this category only (multi-select!)
+//             if (isSelected) {
+//                 // Deselect
+//                 selectedCategories = selectedCategories.filter(c => c !== category);
+//                 this.setAttribute('aria-pressed', 'false');
+//                 this.classList.remove('bg-primary', 'text-white');
+//                 this.classList.add('bg-light', 'text-dark');
+//                 // Remove checkmark
+//                 const checkIcon = this.querySelector('.fa-check');
+//                 if (checkIcon) checkIcon.parentElement.removeChild(checkIcon);
+//             } else {
+//                 // Select
+//                 selectedCategories.push(category);
+//                 this.setAttribute('aria-pressed', 'true');
+//                 this.classList.remove('bg-light', 'text-dark');
+//                 this.classList.add('bg-primary', 'text-white');
+//                 // Add checkmark
+//                 const check = document.createElement('i');
+//                 check.className = 'fas fa-check ms-2';
+//                 this.appendChild(check);
+//             }
+
+//             // Update URL (preserve other params)
+//             const url = new URL(window.location.href);
+//             if (selectedCategories.length > 0) {
+//                 url.searchParams.set('categories', selectedCategories.join(','));
+//             } else {
+//                 url.searchParams.delete('categories');
+//             }
+//             window.location.href = url.toString();
+//         });
+//     });
+// });
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Read currently selected categories from URL (not from hidden element!)
+    const urlParams = new URLSearchParams(window.location.search);
+    const selectedCategories = urlParams.get('categories')
+        ? urlParams.get('categories').split(',').map(c => c.trim()).filter(Boolean)
+        : [];
+
+    // Sync visual state on page load (in case of refresh or back-button)
+    document.querySelectorAll('.category-chip').forEach(chip => {
+        const category = chip.dataset.category;
+        const isSelected = selectedCategories.includes(category);
+        chip.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+        if (isSelected) {
+            chip.classList.remove('bg-light', 'text-dark');
+            chip.classList.add('bg-primary', 'text-white');
+            // Ensure checkmark exists
+            if (!chip.querySelector('.fa-check')) {
+                const check = document.createElement('i');
+                check.className = 'fas fa-check ms-2';
+                chip.appendChild(check);
+            }
+        } else {
+            chip.classList.remove('bg-primary', 'text-white');
+            chip.classList.add('bg-light', 'text-dark');
+            // Remove checkmark if exists
+            const checkIcon = chip.querySelector('.fa-check');
+            if (checkIcon) checkIcon.remove();
+        }
+    });
+
+    // Click handler
+    document.querySelectorAll('.category-chip').forEach(chip => {
+        chip.addEventListener('click', function () {
+            const category = this.dataset.category;
+            const isSelected = this.getAttribute('aria-pressed') === 'true';
+
+            let newSelected;
+            if (isSelected) {
+                // Deselect
+                newSelected = selectedCategories.filter(c => c !== category);
+            } else {
+                // Select (multi-select!)
+                newSelected = [...selectedCategories, category];
+            }
+
+            // Update URL without page reload? No — we need reload to re-filter posts
+            const url = new URL(window.location);
+            if (newSelected.length > 0) {
+                url.searchParams.set('categories', newSelected.join(','));
+            } else {
+                url.searchParams.delete('categories');
+            }
+            window.location.href = url.toString();
+        });
+    });
+});
+</script>
 
 {% endblock %}

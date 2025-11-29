@@ -1,24 +1,34 @@
 {% extends 'layout.html' %}
 
 {% block title %}
-    {{ post.title|default_if_none:"MY post PAGE" }}
+{{ post.title|default_if_none:"MY post PAGE" }}
 {% endblock %}
 
 {% block content %}
 
 <div class="container">
     <h1 style="font-size: 42px;">{{ post.title }}</h1>
+    <span class="px-4 py-2 
+            rounded-pill 
+            bg-primary 
+            text-white 
+            fw-semibold 
+            fs-5 
+            d-inline-flex 
+            align-items-center">
+        {{ category_name }}
+    </span>
     <p><strong>Description:</strong> {{ post.description|default:"No description available" }}</p>
 
     {% if post.image %}
-        <div>
-            <img src="{{ post.image.url }}" alt="{{ post.title }}" class="img-fluid">
-        </div>
+    <div>
+        <img src="{{ post.image.url }}" alt="{{ post.title }}" class="img-fluid">
+    </div>
     {% endif %}
-    
+
     <div class="mt-3 mb-3">
         <strong>Content:</strong>
-        <p style="white-space: pre-wrap; font-size: 18px;">{{ post.content|default:"No content available" }}</p>
+        <p style="white-space: pre-wrap; font-size: 18px;">{{ post.content|default:"No content available"|safe }}</p>
     </div>
 
     <!-- Comment Section -->
@@ -29,9 +39,6 @@
         <form id="addCommentForm" class="mb-4">
             {% csrf_token %}
             <div class="mb-3">
-                <input type="text" class="form-control" name="username" placeholder="Your name" required>
-            </div>
-            <div class="mb-3">
                 <textarea class="form-control" name="content" placeholder="Your comment" rows="3" required></textarea>
             </div>
             <button type="submit" class="btn btn-primary">Add Comment</button>
@@ -40,63 +47,97 @@
         <!-- Comments List -->
         <div id="commentsList">
             {% for comment in comments %}
-                <div class="card mb-2">
-                    <div class="card-body">
-                        <strong>{{ comment.username }}</strong> 
-                        <small class="text-muted">{{ comment.created_at|date:"Y-m-d H:i" }}</small>
-                        <p style="white-space: pre-wrap;">{{ comment.content }}</p>
-                    </div>
+            <div class="card mb-2">
+                <div class="card-body">
+                    <strong>{{ comment.user.username }}</strong>
+                    <small class="text-muted">{{ comment.created_at|date:"Y-m-d H:i" }}</small>
+                    <p style="white-space: pre-wrap;">{{ comment.content }}</p>
                 </div>
+            </div>
             {% empty %}
-                <p class="text-muted">No comments yet. Be the first to comment!</p>
+            <p class="text-muted">No comments yet. Be the first to comment!</p>
             {% endfor %}
         </div>
     </div>
+
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <script>
-$(document).ready(function(){
-    const csrftoken = '{{ csrf_token }}';
+    $(document).ready(function () {
+        const csrftoken = '{{ csrf_token }}';
 
-    // Add Comment AJAX
-    $('#addCommentForm').submit(function(e){
-        e.preventDefault();
-        const form = $(this);
-        $.ajax({
-            url: "{% url 'add_comment' post.id %}",
-            type: "POST",
-            data: form.serialize(),
-            headers: {'X-CSRFToken': csrftoken},
-            success: function(response){
-                if(response.status === "success"){
-                    // Append new comment dynamically
-                    const username = form.find('input[name="username"]').val();
-                    const content = form.find('textarea[name="content"]').val();
-                    const currentDate = new Date().toLocaleString();
+        // Submit Comment
+        $('#addCommentForm').submit(function (e) {
+            e.preventDefault();
 
-                    const commentHtml = `
-                        <div class="card mb-2">
-                            <div class="card-body">
-                                <strong>${username}</strong> <small class="text-muted">${currentDate}</small>
-                                <p style="white-space: pre-wrap;">${content}</p>
-                            </div>
-                        </div>`;
+            {% if user.is_authenticated %}
+            // Logged in → normal comment AJAX
+            const form = $(this);
+            $.ajax({
+                url: "{% url 'add_comment' post.id %}",
+                type: "POST",
+                data: form.serialize(),
+                headers: { 'X-CSRFToken': csrftoken },
+                success: function (response) {
+                    if (response.status === "success") {
+                        const username = "{{ user.username }}";
+                        const content = form.find('textarea[name="content"]').val();
+                        const currentDate = new Date().toLocaleString();
 
-                    $('#commentsList').prepend(commentHtml);
-                    form[0].reset(); // clear form
-                } else {
-                    alert(response.message);
+                        const commentHtml = `
+                            <div class="card mb-2">
+                                <div class="card-body">
+                                    <strong>${username}</strong> <small class="text-muted">${currentDate}</small>
+                                    <p style="white-space: pre-wrap;">${content}</p>
+                                </div>
+                            </div>`;
+                        $('#commentsList').prepend(commentHtml);
+                        form[0].reset();
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function (xhr) {
+                    alert('Error adding comment.');
                 }
-            },
-            error: function(xhr){
-                alert('Error adding comment.');
-                console.log(xhr.responseText);
-            }
+            });
+
+            {% else %}
+            // Not logged in → open login modal
+            $('#loginModal').modal('show');
+            {% endif %}
         });
+
+        // Submit login modal via AJAX
+        // $('#guestLoginForm').submit(function(e){
+        //     e.preventDefault();
+        //     const form = $(this);
+
+        //     $.ajax({
+        //         url: form.attr('action'),
+        //         type: 'POST',
+        //         data: form.serialize(),
+        //         headers: {'X-CSRFToken': csrftoken},
+        //         success: function(response){
+        //             if(response.status === "success"){
+        //                 $('#loginModal').modal('hide');
+        //                 alert(response.message);
+        //                 // Reload page so comment form now works
+        //                 location.reload();
+        //             } else {
+        //                 alert(response.message);
+        //             }
+        //         },
+        //         error: function(xhr){
+        //             alert('Login error.');
+        //         }
+        //     });
+        // });
     });
-});
 </script>
+
+
 
 {% endblock %}

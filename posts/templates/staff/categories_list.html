@@ -1,0 +1,163 @@
+{% extends "staff/layout.html" %}
+
+{% block title %}Categories{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Categories</h2>
+    <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#categoryModal" id="addCategoryBtn">
+        Add Category
+    </button>
+
+    <table class="table table-bordered" id="categoryTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for category in page_obj %}
+            <tr id="category-{{ category.id }}">
+                <td>{{ category.id }}</td>
+                <td class="cat-name">{{ category.name }}</td>
+                <td class="cat-desc">{{ category.desc }}</td>
+                <td>
+                    <button class="btn btn-sm btn-info edit-btn" data-id="{{ category.id }}"
+                            data-name="{{ category.name }}" data-desc="{{ category.desc }}">Edit</button>
+                    <button class="btn btn-sm btn-danger delete-btn" data-id="{{ category.id }}">Delete</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Pagination controls -->
+    <nav>
+        <ul class="pagination">
+            {% if page_obj.has_previous %}
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">Previous</span></li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% else %}
+                <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+            {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">Next</span></li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="categoryModal" tabindex="-1" aria-labelledby="categoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form id="categoryForm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="categoryModalLabel">Add Category</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="categoryId">
+                    <div class="mb-3">
+                        <label for="categoryName" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="categoryName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="categoryDesc" class="form-label">Description</label>
+                        <textarea class="form-control" id="categoryDesc"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary" id="saveCategoryBtn">Save</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(function () {
+
+        // Open modal for add
+        $('#addCategoryBtn').click(function () {
+            $('#categoryForm')[0].reset();
+            $('#categoryId').val('');
+            $('#categoryModalLabel').text('Add Category');
+        });
+
+        // Submit form for create/edit
+        $('#categoryForm').submit(function (e) {
+            e.preventDefault();
+            var id = $('#categoryId').val();
+            var url = id ? '/staff/categories/' + id + '/edit/' : '/staff/categories/create/';
+
+            // var url = id ? '/categories/' + id + '/edit/' : '/categories/create/';
+            $.post(url, {
+                name: $('#categoryName').val(),
+                desc: $('#categoryDesc').val(),
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            }, function (data) {
+                if (data.success) {
+                    var row = `<tr id="category-${data.id}">
+                    <td>${data.id}</td>
+                    <td class="cat-name">${data.name}</td>
+                    <td class="cat-desc">${$('#categoryDesc').val()}</td>
+                    <td>
+                        <button class="btn btn-sm btn-info edit-btn" data-id="${data.id}" data-name="${data.name}" data-desc="${$('#categoryDesc').val()}">Edit</button>
+                        <button class="btn btn-sm btn-danger delete-btn" data-id="${data.id}">Delete</button>
+                    </td>
+                </tr>`;
+                    if (id) {
+                        $('#category-' + id).replaceWith(row);
+                    } else {
+                        $('#categoryTable tbody').append(row);
+                    }
+                    $('#categoryModal').modal('hide');
+                }
+            });
+        });
+
+        // Edit button click
+        $(document).on('click', '.edit-btn', function () {
+            var id = $(this).data('id');
+            $('#categoryId').val(id);
+            $('#categoryName').val($(this).data('name'));
+            $('#categoryDesc').val($(this).data('desc'));
+            $('#categoryModalLabel').text('Edit Category');
+            $('#categoryModal').modal('show');
+        });
+
+        // Delete button click
+        $(document).on('click', '.delete-btn', function () {
+            if (confirm('Are you sure to delete this category?')) {
+                var id = $(this).data('id');
+                $.post('/staff/categories/' + id + '/delete/', {
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                }, function (data) {
+                    if (data.success) {
+                        $('#category-' + id).remove();
+                    }
+                });
+            }
+        });
+
+    });
+</script>
+{% endblock %}

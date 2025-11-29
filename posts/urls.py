@@ -17,5 +17,6 @@ urlpatterns = [
     path('comment/<int:comment_id>/add_reply/', views.add_reply, name='add_reply'),
     
     # re_path(r'^.*$', views.custom_404),
+    # path("dj-admin", view)
 ]
 

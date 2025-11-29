@@ -1,0 +1,86 @@
+{% extends "staff/layout.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+
+    <h1>Welcome, {{ request.user.username }}</h1>
+</div>
+<!-- <p>This is your admin dashboard.</p> -->
+<div class="row mt-2">
+    <!-- Posts Card -->
+    <div class="col-md-2">
+        <a href="{% url 'staff_posts' %}" class="text-decoration-none">
+            <div class="card text-white bg-info mb-3 clickable-card">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-clipboard-list"></i> Posts
+                    </h5>
+                    <p class="card-text display-4">{{ posts_count }}</p>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <!-- Comments Card -->
+    <div class="col-md-2">
+        <a href="{% url 'staff_comments' %}" class="text-decoration-none">
+            <div class="card text-white bg-warning mb-3 clickable-card">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-comments"></i> Comments
+                    </h5>
+                    <p class="card-text display-4">{{ comments_count }}</p>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <!-- Categories Card -->
+    <div class="col-md-2">
+        <a href="{% url 'staff_categories' %}" class="text-decoration-none">
+            <div class="card text-white bg-success mb-3 clickable-card">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-tags"></i> Categories
+                    </h5>
+                    <p class="card-text display-4">{{ categories_count }}</p>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <!-- Users Card -->
+    <div class="col-md-2">
+        <a href="{% url 'staff_user_list' %}" class="text-decoration-none">
+            <div class="card text-white bg-danger mb-3 clickable-card">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-users"></i> Users
+                    </h5>
+                    <p class="card-text display-4">{{ users_count }}</p>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+
+
+<style>
+    .clickable-card {
+        transition: transform 0.2s ease-in-out;
+        cursor: pointer;
+    }
+
+    .clickable-card:hover {
+        transform: scale(1.03);
+    }
+
+    /* Remove underline from <a> around the card */
+    a.text-decoration-none {
+        color: inherit !important;
+    }
+</style>
+{% endblock %}

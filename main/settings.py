@@ -131,3 +131,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MEDIA_URL = 'media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
+# Default login for normal users
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/'
+
+# Staff login
+STAFF_LOGIN_URL = '/staff/login/'
+STAFF_LOGIN_REDIRECT_URL = '/staff/'

@@ -22,11 +22,16 @@ from django.urls import include
 from django.conf import settings
 from django.conf.urls.static import static
 
-
+from posts.views.auth_views import login_view, staff_login_view, logout_view, login_or_create_user
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    # path('admin/', admin.site.urls),
     path('', include('posts.urls')),
+    path('login/', login_view, name='login'),
+    path('staff/login/', staff_login_view, name='staff_login'),
+    path("staff/", include("posts.staff_urls")),
+    path('logout', logout_view, name="logout"),
+    path("guest-login/", login_or_create_user, name="guest-login"),
 ]
 
 if settings.DEBUG:
